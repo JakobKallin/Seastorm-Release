@@ -101,6 +101,9 @@ def add_seastorm_log_line(line):
 
 repy_sendmess = sendmess
 def sendmess(other_ip, other_port, payload, this_ip, this_port, title=None):
+  if (other_ip, other_port) not in mycontext['seastorm_vessels']:
+    return repy_sendmess(other_ip, other_port, payload, this_ip, this_port)
+
   # Adjust the Lamport clock.
   departure = increase_seastorm_clock()
   
@@ -130,24 +133,27 @@ def sendmess(other_ip, other_port, payload, this_ip, this_port, title=None):
 repy_recvmess = recvmess
 def recvmess(this_ip, this_port, user_callback):
   def message_received(other_ip, other_port, message, commhandle):
-    # Parse the data from the received message.
-    departure = int(message[:4])
-    payload = message[4:]
-    
-    # Adjust the Lamport clock.
-    arrival = adjust_seastorm_clock(departure)
-    
-    # Create a log entry for the received message.
-    add_seastorm_receive_entry(
-      arrival=arrival,
-      departure=departure,
-      sender=other_ip + ':' + str(other_port),
-      payload=payload
-    )
-    
-    # Run the user-provided callback after everything else, because it might
-    # contain calls to `sendmess` that will modify the clock.
-    user_callback(other_ip, other_port, payload, commhandle)
+    if (other_ip, other_port) in mycontext['seastorm_vessels']:
+      # Parse the data from the received message.
+      departure = int(message[:4])
+      payload = message[4:]
+      
+      # Adjust the Lamport clock.
+      arrival = adjust_seastorm_clock(departure)
+      
+      # Create a log entry for the received message.
+      add_seastorm_receive_entry(
+        arrival=arrival,
+        departure=departure,
+        sender=other_ip + ':' + str(other_port),
+        payload=payload
+      )
+      
+      # Run the user-provided callback after everything else, because it might
+      # contain calls to `sendmess` that will modify the clock.
+      user_callback(other_ip, other_port, payload, commhandle)
+    else:
+      user_callback(other_ip, other_port, message, commhandle)
     
   commhandle = repy_recvmess(this_ip, this_port, message_received)
   return commhandle
@@ -255,18 +261,38 @@ def adapt_socket_to_seastorm(socket, other_ip, other_port):
 repy_openconn = openconn
 def openconn(other_ip, other_port, this_ip=None, this_port=None, timeout=5):
   socket = repy_openconn(other_ip, other_port, this_ip, this_port, timeout)
-  seastorm_socket = adapt_socket_to_seastorm(socket, other_ip, other_port)
-  return seastorm_socket
+
+  if (other_ip, other_port) in mycontext['seastorm_vessels']:
+    seastorm_socket = adapt_socket_to_seastorm(socket, other_ip, other_port)
+    return seastorm_socket
+  else:
+    return socket
 
 repy_waitforconn = waitforconn
 def waitforconn(this_ip, this_port, user_callback):
   def seastorm_callback(other_ip, other_port, socket, commhandle, listenhandle):
-    seastorm_socket = adapt_socket_to_seastorm(socket, other_ip, other_port)
-    user_callback(other_ip, other_port, seastorm_socket, commhandle, listenhandle)
+    if (other_ip, other_port) in mycontext['seastorm_vessels']:
+      seastorm_socket = adapt_socket_to_seastorm(socket, other_ip, other_port)
+      user_callback(other_ip, other_port, seastorm_socket, commhandle, listenhandle)
+    else:
+      user_callback(other_ip, other_port, socket, commhandle, listenhandle)
   
   return repy_waitforconn(this_ip, this_port, seastorm_callback)
 
+# Create a list of all vessels available to the user, so that we can avoid
+# logging messages from other nodes (which don't have departure metadata).
+def add_seastorm_vessels():
+  vessel_file = open('vessels')
+  vessel_lines = vessel_file.read().strip().split('\n')
+  mycontext['seastorm_vessels'] = []
+  for line in vessel_lines:
+    ip, port_str = line.split(':')
+    mycontext['seastorm_vessels'].append((ip, int(port_str)))
+  vessel_file.close()
+
 if callfunc in ['initialize', 'import']:
+  add_seastorm_vessels()
+
   # Create empty log.
   if 'seastorm.log' in listdir():
     removefile('seastorm.log')
