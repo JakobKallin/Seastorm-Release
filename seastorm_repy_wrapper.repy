@@ -297,7 +297,6 @@ def add_seastorm_vessels():
 
 if callfunc in ['initialize', 'import']:
   add_seastorm_vessels()
-  log(mycontext['seastorm_vessels'])
 
   # Create empty log.
   if 'seastorm.log' in listdir():
@@ -314,3 +313,5 @@ if callfunc in ['initialize', 'import']:
   
   # Only one thread handling remote socket closing at any given time.
   mycontext['seastorm_close_lock'] = getlock()
+  
+  log(mycontext['seastorm_vessels'])
