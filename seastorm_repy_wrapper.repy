@@ -297,6 +297,7 @@ def add_seastorm_vessels():
 
 if callfunc in ['initialize', 'import']:
   add_seastorm_vessels()
+  log(mycontext['seastorm_vessels'])
 
   # Create empty log.
   if 'seastorm.log' in listdir():
