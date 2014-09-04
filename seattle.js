@@ -95,6 +95,6 @@ seastorm.seattle = {
 	},
 	
 	vesselId: function(vessel) {
-		return vessel.ip + ':' + vessel.userPort;
+		return vessel.ip;
 	}
 };
