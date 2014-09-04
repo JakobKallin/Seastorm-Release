@@ -261,6 +261,7 @@ def openconn(other_ip, other_port, this_ip=None, this_port=None, timeout=5):
 repy_waitforconn = waitforconn
 def waitforconn(this_ip, this_port, user_callback):
   def seastorm_callback(other_ip, other_port, socket, commhandle, listenhandle):
+    log('connection received')
     seastorm_socket = adapt_socket_to_seastorm(socket, other_ip, other_port)
     user_callback(other_ip, other_port, seastorm_socket, commhandle, listenhandle)
   
