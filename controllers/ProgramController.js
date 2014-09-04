@@ -202,7 +202,7 @@ seastorm.ProgramController = function(
 	}
 	
 	function latestException(log) {
-		var exceptionHeader = '---\nUncaught exception!\n---';
+		var exceptionHeader = '---\nUncaught exception!';
 		var exceptionIndex = log.lastIndexOf(exceptionHeader);
 		
 		var startHeader = '========================================\nRunning program:';
