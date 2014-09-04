@@ -101,7 +101,7 @@ def add_seastorm_log_line(line):
 
 repy_sendmess = sendmess
 def sendmess(other_ip, other_port, payload, this_ip, this_port, title=None):
-  if (other_ip, other_port) not in mycontext['seastorm_vessels']:
+  if other_ip not in mycontext['seastorm_vessels']:
     return repy_sendmess(other_ip, other_port, payload, this_ip, this_port)
 
   # Adjust the Lamport clock.
@@ -133,7 +133,7 @@ def sendmess(other_ip, other_port, payload, this_ip, this_port, title=None):
 repy_recvmess = recvmess
 def recvmess(this_ip, this_port, user_callback):
   def message_received(other_ip, other_port, message, commhandle):
-    if (other_ip, other_port) in mycontext['seastorm_vessels']:
+    if other_ip in mycontext['seastorm_vessels']:
       # Parse the data from the received message.
       departure = int(message[:4])
       payload = message[4:]
@@ -265,7 +265,7 @@ repy_openconn = openconn
 def openconn(other_ip, other_port, this_ip=None, this_port=None, timeout=5):
   socket = repy_openconn(other_ip, other_port, this_ip, this_port, timeout)
 
-  if (other_ip, other_port) in mycontext['seastorm_vessels']:
+  if other_ip in mycontext['seastorm_vessels']:
     seastorm_socket = adapt_socket_to_seastorm(socket, other_ip, other_port)
     return seastorm_socket
   else:
@@ -275,7 +275,7 @@ repy_waitforconn = waitforconn
 def waitforconn(this_ip, this_port, user_callback):
   def seastorm_callback(other_ip, other_port, socket, commhandle, listenhandle):
     log('looking for %s:%s in vessel list' % (other_ip, other_port))
-    if (other_ip, other_port) in mycontext['seastorm_vessels']:
+    if other_ip in mycontext['seastorm_vessels']:
       log('creating wrapped socket')
       seastorm_socket = adapt_socket_to_seastorm(socket, other_ip, other_port)
       user_callback(other_ip, other_port, seastorm_socket, commhandle, listenhandle)
@@ -293,7 +293,7 @@ def add_seastorm_vessels():
   mycontext['seastorm_vessels'] = []
   for line in vessel_lines:
     ip, port_str = line.split(':')
-    mycontext['seastorm_vessels'].append((ip, int(port_str)))
+    mycontext['seastorm_vessels'].append(ip)
   vessel_file.close()
 
 if callfunc in ['initialize', 'import']:
