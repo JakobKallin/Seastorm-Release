@@ -185,6 +185,7 @@ def adapt_socket_to_seastorm(socket, other_ip, other_port):
   }
   
   def handle_remote_socket_close():
+    log('handling remote socket close')
     mycontext['seastorm_close_lock'].acquire()
     if recv_state['departure'] is not None and recv_state['arrival'] is None:
       # All of the data has been received, so adjust the Lamport clock.
@@ -235,6 +236,8 @@ def adapt_socket_to_seastorm(socket, other_ip, other_port):
         
         payload = socket.recv(recv_bytes)
         recv_state['buffer'] += payload
+
+        log('received: %s' % recv_state['buffer'])
         
         return payload
       except Exception:
