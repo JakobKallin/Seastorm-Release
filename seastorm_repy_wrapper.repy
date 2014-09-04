@@ -274,6 +274,7 @@ def openconn(other_ip, other_port, this_ip=None, this_port=None, timeout=5):
 repy_waitforconn = waitforconn
 def waitforconn(this_ip, this_port, user_callback):
   def seastorm_callback(other_ip, other_port, socket, commhandle, listenhandle):
+    log('looking for %s:%s in vessel list' % (other_ip, other_port))
     if (other_ip, other_port) in mycontext['seastorm_vessels']:
       log('creating wrapped socket')
       seastorm_socket = adapt_socket_to_seastorm(socket, other_ip, other_port)
@@ -313,5 +314,5 @@ if callfunc in ['initialize', 'import']:
   
   # Only one thread handling remote socket closing at any given time.
   mycontext['seastorm_close_lock'] = getlock()
-  
+
   log(mycontext['seastorm_vessels'])
