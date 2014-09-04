@@ -275,9 +275,11 @@ repy_waitforconn = waitforconn
 def waitforconn(this_ip, this_port, user_callback):
   def seastorm_callback(other_ip, other_port, socket, commhandle, listenhandle):
     if (other_ip, other_port) in mycontext['seastorm_vessels']:
+      log('creating wrapped socket')
       seastorm_socket = adapt_socket_to_seastorm(socket, other_ip, other_port)
       user_callback(other_ip, other_port, seastorm_socket, commhandle, listenhandle)
     else:
+      log('creating plain socket')
       user_callback(other_ip, other_port, socket, commhandle, listenhandle)
   
   return repy_waitforconn(this_ip, this_port, seastorm_callback)
