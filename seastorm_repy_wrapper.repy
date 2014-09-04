@@ -166,6 +166,106 @@ def log(*args, **kwargs):
     content=''.join(map(str, args))
   )
 
+def adapt_socket_to_seastorm(socket, other_ip, other_port):
+  send_state = {
+    'buffer': '',
+    'departure': None
+  }
+  
+  recv_state = {
+    'buffer': '',
+    'departure': None,
+    'arrival': None
+  }
+  
+  def handle_remote_socket_close():
+    mycontext['seastorm_close_lock'].acquire()
+    if recv_state['departure'] is not None and recv_state['arrival'] is None:
+      # All of the data has been received, so adjust the Lamport clock.
+      recv_state['arrival'] = adjust_seastorm_clock(recv_state['departure'])
+      
+      add_seastorm_receive_entry(
+        arrival=recv_state['arrival'],
+        departure=recv_state['departure'],
+        sender=other_ip + ':' + str(other_port),
+        payload=recv_state['buffer']
+      )
+    mycontext['seastorm_close_lock'].release()
+  
+  class SeastormSocket:
+    def send(self, payload):
+      # If this is the first time sending, make sure to send the timestamp
+      # before sending anything else.
+      if send_state['departure'] is None:
+        departure = increase_seastorm_clock()
+        
+        # Add departure metadata to the message, needed for adjusting the
+        # recipient's Lamport clock.
+        metadata = str(departure) + ','
+        metadata_bytes = 0
+        while metadata_bytes < len(metadata):
+          metadata_bytes += socket.send(metadata[metadata_bytes:])
+        
+        send_state['departure'] = departure
+      
+      payload_bytes = socket.send(payload)
+      send_state['buffer'] += payload[:payload_bytes]
+      
+      return payload_bytes
+    
+    def recv(self, recv_bytes):
+      try:
+        if recv_state['departure'] is None:
+          # If we haven't received anything before, receive until we get the
+          # entire timestamp.
+          head = ''
+          while ',' not in head:
+            head += socket.recv(1)
+            
+          departure_str = head.split(',')[0]
+          departure = int(departure_str)
+          
+          recv_state['departure'] = departure
+        
+        payload = socket.recv(recv_bytes)
+        recv_state['buffer'] += payload
+        
+        return payload
+      except Exception:
+        handle_remote_socket_close()
+        raise
+    
+    def close(self):
+      # If data has been sent, add a log entry for it.
+      if send_state['departure'] is not None:
+        add_seastorm_send_entry(
+          departure=send_state['departure'],
+          recipient=other_ip + ':' + str(other_port),
+          payload=send_state['buffer']
+        )
+      
+      # If data has been received, add a log entry for it.
+      handle_remote_socket_close()
+      
+      return socket.close()
+  
+  seastorm_socket = SeastormSocket()
+  return seastorm_socket
+
+repy_openconn = openconn
+def openconn(other_ip, other_port, this_ip=None, this_port=None, timeout=5):
+  socket = repy_openconn(other_ip, other_port, this_ip, this_port, timeout)
+  seastorm_socket = adapt_socket_to_seastorm(socket, other_ip, other_port)
+  return seastorm_socket
+
+repy_waitforconn = waitforconn
+def waitforconn(this_ip, this_port, user_callback):
+  def seastorm_callback(other_ip, other_port, socket, commhandle, listenhandle):
+    seastorm_socket = adapt_socket_to_seastorm(socket, other_ip, other_port)
+    user_callback(other_ip, other_port, seastorm_socket, commhandle, listenhandle)
+  
+  return repy_waitforconn(this_ip, this_port, seastorm_callback)
+
 if callfunc in ['initialize', 'import']:
   # Create empty log.
   if 'seastorm.log' in listdir():
