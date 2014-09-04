@@ -123,7 +123,7 @@ def sendmess(other_ip, other_port, payload, this_ip, this_port, title=None):
   if payload_bytes_sent > 0:
     add_seastorm_send_entry(
       departure=departure,
-      recipient=other_ip + ':' + str(other_port),
+      recipient=other_ip,
       payload=payload,
       title=title
     )
@@ -145,7 +145,7 @@ def recvmess(this_ip, this_port, user_callback):
       add_seastorm_receive_entry(
         arrival=arrival,
         departure=departure,
-        sender=other_ip + ':' + str(other_port),
+        sender=other_ip,
         payload=payload
       )
       
@@ -194,7 +194,7 @@ def adapt_socket_to_seastorm(socket, other_ip, other_port):
       add_seastorm_receive_entry(
         arrival=recv_state['arrival'],
         departure=recv_state['departure'],
-        sender=other_ip + ':' + str(other_port),
+        sender=other_ip,
         payload=recv_state['buffer']
       )
     mycontext['seastorm_close_lock'].release()
@@ -249,7 +249,7 @@ def adapt_socket_to_seastorm(socket, other_ip, other_port):
       if send_state['departure'] is not None:
         add_seastorm_send_entry(
           departure=send_state['departure'],
-          recipient=other_ip + ':' + str(other_port),
+          recipient=other_ip,
           payload=send_state['buffer']
         )
       
