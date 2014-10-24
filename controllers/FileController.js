@@ -78,7 +78,7 @@ seastorm.FileController = function($scope, externalFilesystem) {
 				var eventSource = externalFilesystem.createEventSource();
 				eventSource.onmessage = function(event) {
 					var filename = event.data;
-					if ( filename.match(/[^a-zA-Z-_.]/) ) {
+					if ( filename.match(/[^a-zA-Z-_.]/) || filename.match(/^\./) ) {
 						console.log('File ignored due to name: ' + filename);
 						return;
 					}
