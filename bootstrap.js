@@ -35,3 +35,9 @@ angular.module('seastorm', [])
 .factory('seattle', function() {
 	return seastorm.seattle;
 })
+
+.factory('$exceptionHandler', function() {
+	return function(error, cause) {
+		alert(error.message);
+	};
+})

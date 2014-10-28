@@ -62,7 +62,7 @@ seastorm.FileController = function($scope, externalFilesystem) {
 			
 			addFile: function() {
 				var newFile = {
-					name: 'Untitled',
+					name: 'untitled.repy',
 					contents: ''
 				};
 				$scope.model.files.push(newFile);

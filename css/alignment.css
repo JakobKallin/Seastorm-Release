@@ -4,6 +4,15 @@
 	text-align: center;
 }
 
+.login .hint {
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+}
+
+.login input {
+	width: 100%;
+}
+
 /* Monitor */
 .monitor > section + section {
 	margin-top: 2rem;
