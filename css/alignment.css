@@ -1,3 +1,9 @@
+header p {
+	position: absolute;
+	top: 0.5rem;
+	right: 1rem;
+}
+
 /* Sign in */
 .login .actions {
 	margin-top: 1rem;

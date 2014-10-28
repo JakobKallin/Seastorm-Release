@@ -50,6 +50,7 @@
 	<body data-ng-app="seastorm" data-ng-controller="AppController">
 		<header>
 			<h1>Seattle Seastorm</h1>
+			<p><a href="manual.html" target="_blank">Help</a></p>
 		</header>
 		<main>
 			<div class="loading" data-ng-show="model.loading">
@@ -97,7 +98,7 @@
 								</tr>
 							</tbody>
 						</table>
-						<p class="hint">Your username and API key are available in the <a href="https://seattleclearinghouse.poly.edu/">Seattle Clearinghouse</a>.</p>
+						<p class="hint">Your username and API key are available in the <a href="https://seattleclearinghouse.poly.edu/" target="_blank">Seattle Clearinghouse</a>.</p>
 						<p class="actions">
 							<seastorm-process-button
 								data-process="login"
@@ -111,7 +112,7 @@
 			<div class="monitor" data-ng-show="model.login.successful" data-ng-controller="ProgramController">
 				<section id="vessels">
 					<h2>Vessels</h2>
-					<table class="regular">
+					<table class="regular" data-ng-show="model.programs.length > 0">
 						<colgroup>
 							<col style="width: 5%">
 							<col style="width: 10%">
@@ -145,7 +146,7 @@
 							</tr>
 						</tbody>
 					</table>
-					<form method="post">
+					<form method="post" data-ng-show="model.programs.length > 0">
 						<p class="actions">
 							<seastorm-process-button
 								data-process="start"
@@ -169,6 +170,7 @@
 							<button type="button" data-ng-click="model.error = null">Close</button>
 						</p>
 					</form>
+					<p data-ng-show="model.programs.length == 0" class="no-vessels">You have no vessels. Acquire vessels at the <a href="https://seattleclearinghouse.poly.edu/html/myvessels" target="_blank">Seattle Clearinghouse</a>, then reload this page.</p>
 				</section>
 				<section id="files" data-ng-controller="FileController">
 					<h2>Files</h2>
